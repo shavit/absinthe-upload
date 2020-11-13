@@ -1,6 +1,32 @@
 defmodule Absinthe.Upload do
   @moduledoc """
-  Documentation for `Absinthe.Upload`.
+  Documentation for `Absinthe.Upload`. Absinthe plug to support Apollo upload format
+
+  Add the plug to your app
+
+  ```
+  # app/router.ex
+  defmodule App.Router do
+    plug(Absinthe.Upload)
+    ...
+  ```
+
+  Requests with file uploads from Apollo clients has `"map"` and `"operations"`
+  ```
+  %{
+  "0" => %Plug.Upload{},
+    "map" => "{\"0\":[\"variables.attachment\"]}",
+    "operations" => "{\"query\":\"mutation DemoUpload($attachment: Upload) {\\n  demoUpload(attachment: $attachment)\\n}\",\"variables\":{\"attachment\":null},\"operationName\":\"DemoUpload\"}"
+  }
+  ```
+
+  The plug will transform the request to a format Absinthe understands
+  ```
+  %{
+    "attachment" => %Plug.Upload{},
+    "query" => "mutation DemoUpload($attachment: Upload) {  demoUpload(attachment: $attachment)}"
+  }
+  ```
   """
 
   def init(conn), do: conn
