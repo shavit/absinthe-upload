@@ -35,12 +35,14 @@ defmodule Absinthe.Upload do
     with {:ok, map_json} <- Jason.decode(mvars) do
       query = get_operations(conn)
       upload_params = get_upload_params(conn, map_json)
+      variables = conn |> get_variables(upload_params)
       drop_keys = Map.keys(map_json) ++ ["operations", "map"]
 
       conn
       |> Map.update!(:params, fn x ->
         x
         |> Map.put("query", query)
+        |> Map.put("variables", variables)
         |> Map.drop(drop_keys)
         |> Enum.into(upload_params)
       end)
@@ -68,4 +70,14 @@ defmodule Absinthe.Upload do
   end
 
   defp get_operations(_conn), do: nil
+
+  defp get_variables(%{:body_params => %{"operations" => j}}, params) do
+    vars = j |> Jason.decode!() |> Map.get("variables")
+
+    params
+    |> Enum.reduce(%{}, fn {k, _v}, acc -> Map.put(acc, k, k) end)
+    |> Enum.into(vars)
+  end
+
+  defp get_variables(_conn, _params), do: %{}
 end
